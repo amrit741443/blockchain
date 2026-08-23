@@ -19,7 +19,7 @@ impl AccountQueue {
     }
 
     pub fn next_accepted_nonce(&self) -> u64 {
-        self.next_none
+        self.next_accepted_nonce
     }
 
     pub fn transactions(&self) -> &BTreeMap<u64, Hash> {
