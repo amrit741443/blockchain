@@ -34,7 +34,7 @@ impl AccountQueue {
     pub fn front(&self) -> Option<(u64, Hash)> {
         self.transactions
             .first_key_value()
-            .map(|(nonce, hash)| (*nonce, hash.clone()))
+            .map(|(nonce, hash)| (*nonce, *hash))
     }
 
     /*
