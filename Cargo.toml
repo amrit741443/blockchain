@@ -2,6 +2,7 @@
 [workspace]
 members = [
     "crates/crypto",
+    "crates/core",
 ]
 
 resolver ="3"
