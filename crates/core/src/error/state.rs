@@ -1,21 +1,16 @@
 // state.rs
 
-use crypto::Address;
 use thiserror::Error;
 
 use crate::error::{AccountError, BlockError, TransactionError};
 
 #[derive(Debug, Error)]
 pub enum StateError {
-    #[error("account {address} not found")]
-    AccountNotFound { address: Address },
+    #[error("account  not found")]
+    AccountNotFound,
 
-    #[error("invalid nonce for account {address}: expected {expected}, got {got}")]
-    InvalidNonce {
-        address: Address,
-        expected: u64,
-        got: u64,
-    },
+    #[error("invalid nonce for account: expected {expected}, got {got}")]
+    InvalidNonce { expected: u64, got: u64 },
 
     #[error("transaction validation failed: {0}")]
     InvalidTransaction(#[from] TransactionError),

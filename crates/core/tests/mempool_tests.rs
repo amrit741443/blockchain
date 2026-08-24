@@ -18,9 +18,8 @@ fn test_mempool_fee_priority_respects_nonce_order() {
     let bob_addr = Address::from(bob.public_key());
 
     // Give both accounts enough balance.
-    blockchain.state_mut().credit(alice_addr, 5000);
-
-    blockchain.state_mut().credit(bob_addr, 5000);
+    let _alice_result = blockchain.state_mut().credit(alice_addr, 5000);
+    let _bob_result = blockchain.state_mut().credit(bob_addr, 5000);
 
     // ---------------------------------------------------------
     // Alice:
@@ -96,9 +95,8 @@ fn test_priority_selection_does_not_modify_mempool() {
     let alice_addr = Address::from(alice.public_key());
     let bob_addr = Address::from(bob.public_key());
 
-    blockchain.state_mut().credit(alice_addr, 5000);
-
-    blockchain.state_mut().credit(bob_addr, 5000);
+    let _alice_result = blockchain.state_mut().credit(alice_addr, 5000);
+    let _bob_result = blockchain.state_mut().credit(bob_addr, 5000);
 
     let alice_tx_0 = Transaction::new(&alice, bob.public_key(), 100, 0, 5).unwrap();
 
@@ -146,7 +144,7 @@ fn test_mempool_rejects_wrong_nonce() {
 
     let alice_addr = Address::from(alice.public_key());
 
-    blockchain.state_mut().credit(alice_addr, 5000);
+    let _alice_result = blockchain.state_mut().credit(alice_addr, 5000);
 
     // Alice's state nonce starts at 0.
     //
@@ -173,7 +171,7 @@ fn test_mempool_accepts_sequential_nonces() {
 
     let alice_addr = Address::from(alice.public_key());
 
-    blockchain.state_mut().credit(alice_addr, 5000);
+    let _alice_result = blockchain.state_mut().credit(alice_addr, 5000);
 
     // Alice nonce 0.
     let tx_0 = Transaction::new(&alice, bob.public_key(), 100, 0, 10).unwrap();
@@ -199,7 +197,7 @@ fn test_mempool_rejects_nonce_gap() {
 
     let alice_addr = Address::from(alice.public_key());
 
-    blockchain.state_mut().credit(alice_addr, 5000);
+    let _alice_result = blockchain.state_mut().credit(alice_addr, 5000);
 
     // First submit nonce 0.
     let tx_0 = Transaction::new(&alice, bob.public_key(), 100, 0, 10).unwrap();
@@ -229,7 +227,7 @@ fn test_mempool_balance_reservation() {
     let alice_addr = Address::from(alice.public_key());
 
     // Alice only has 150.
-    blockchain.state_mut().credit(alice_addr, 150);
+    let _alice_result = blockchain.state_mut().credit(alice_addr, 150);
 
     // Cost = amount + fee = 100 + 10 = 110.
     let tx_0 = Transaction::new(&alice, bob.public_key(), 100, 0, 10).unwrap();

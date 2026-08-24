@@ -102,7 +102,7 @@ impl Block {
 
         let calculated_hash = self.header.calculate_hash();
 
-        if calculated_hash == self.hash {
+        if calculated_hash != self.hash {
             return Err(BlockError::InvalidBlockHash);
         }
 

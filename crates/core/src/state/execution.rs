@@ -28,8 +28,7 @@ impl<'a> ExecutionContext<'a> {
     }
 
     fn get_required_account(&self, address: &Address) -> Result<Account, StateError> {
-        self.get_account(address)
-            .ok_or_else(|| StateError::AccountNotFound { address: *address })
+        self.get_account(address).ok_or(StateError::AccountNotFound)
     }
 
     pub fn set_account(&mut self, address: Address, account: Account) {
@@ -56,7 +55,6 @@ impl<'a> ExecutionContext<'a> {
 
         if sender.nonce() != tx.nonce() {
             return Err(StateError::InvalidNonce {
-                address: sender_address,
                 expected: sender.nonce(),
                 got: tx.nonce(),
             });

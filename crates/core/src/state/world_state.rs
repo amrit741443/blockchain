@@ -63,7 +63,7 @@ impl State {
     /// Generates a deterministic State Root Hash across all account balances
     pub fn state_root(&self) -> Hash {
         let mut sorted_accounts: Vec<(&Address, &Account)> = self.accounts.iter().collect();
-        sorted_accounts.sort_by(|a, b| a.0.cmp(&b.0));
+        sorted_accounts.sort_by(|a, b| a.0.cmp(b.0));
 
         let bytes = bincode::serialize(&sorted_accounts).expect("Failed to serialize");
         Hash::digest(&bytes)
