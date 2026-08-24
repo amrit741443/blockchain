@@ -15,4 +15,7 @@ pub enum AccountError {
 
     #[error("account nonce overflow")]
     NonceOverflow,
+
+    #[error("account not found")]
+    AccountNotFound,
 }

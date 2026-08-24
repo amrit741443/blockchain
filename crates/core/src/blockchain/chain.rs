@@ -51,6 +51,10 @@ impl Blockchain {
         &self.state
     }
 
+    pub fn state_mut(&mut self) -> &mut State {
+        &mut self.state
+    }
+
     pub fn difficulty(&self) -> usize {
         self.difficulty
     }

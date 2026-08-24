@@ -11,9 +11,9 @@ pub struct AccountQueue {
 }
 
 impl AccountQueue {
-    pub fn new() -> Self {
+    pub fn new(nonce: u64) -> Self {
         Self {
-            next_accepted_nonce: 0,
+            next_accepted_nonce: nonce,
             transactions: BTreeMap::new(),
         }
     }
