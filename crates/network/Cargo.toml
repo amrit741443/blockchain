@@ -1,0 +1,12 @@
+[package]
+name = "network"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tokio = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+bincode = { workspace = true }
+blockchain_core = { path = "../core" }
+crypto = { path = "../crypto" }

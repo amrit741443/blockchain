@@ -1,4 +1,4 @@
-use core::{
+use blockchain_core::{
     blockchain::Blockchain, constants::DEFAULT_DIFFICULTY, mempool::Mempool, miner::Miner,
     transaction::Transaction,
 };

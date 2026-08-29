@@ -3,7 +3,7 @@ use sha2::{Digest, Sha256};
 use std::fmt;
 use std::ops::Deref;
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Default, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Hash([u8; 32]);
 
 impl Hash {
@@ -62,11 +62,5 @@ impl Deref for Hash {
 
     fn deref(&self) -> &Self::Target {
         &self.0
-    }
-}
-
-impl Default for Hash {
-    fn default() -> Self {
-        Hash([0u8; 32])
     }
 }

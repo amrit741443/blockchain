@@ -317,15 +317,15 @@ impl Mempool {
              * Now the next transaction from this account
              * may become executable.
              */
-            if let Some((next_nonce, next_hash)) = queue.front() {
-                if let Some(next_tx) = self.pending_transactions.get(&next_hash) {
-                    heap.push(PriorityEntry::new(
-                        next_tx.fee(),
-                        sender,
-                        next_nonce,
-                        next_hash,
-                    ));
-                }
+            if let Some((next_nonce, next_hash)) = queue.front()
+                && let Some(next_tx) = self.pending_transactions.get(&next_hash)
+            {
+                heap.push(PriorityEntry::new(
+                    next_tx.fee(),
+                    sender,
+                    next_nonce,
+                    next_hash,
+                ));
             }
         }
 
