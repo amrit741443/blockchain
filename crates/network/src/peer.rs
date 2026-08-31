@@ -13,6 +13,8 @@ pub struct Peer {
     stream: TcpStream,
 }
 
+const MAX_MESSAGE_SIZE: usize = 1024 * 1024;
+
 impl Peer {
     pub fn new(address: SocketAddr, stream: TcpStream) -> Self {
         Self { address, stream }
@@ -49,6 +51,10 @@ impl Peer {
         self.stream.read_exact(&mut length_bytes).await?;
 
         let length = u32::from_be_bytes(length_bytes) as usize;
+
+        if length > MAX_MESSAGE_SIZE {
+            return Err("Network message too large".into());
+        }
 
         let mut payload = vec![0u8; length];
 

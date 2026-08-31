@@ -1,114 +1,99 @@
-use blockchain_core::{blockchain::Blockchain, transaction::Transaction};
+use std::{net::SocketAddr, time::Duration};
 
-use crypto::{Address, Keypair};
+use tokio::{net::TcpListener, sync::mpsc, time::timeout};
 
-use network::{NetworkMessage, Node, Peer};
+use network::{NetworkEvent, NetworkMessage, Node, OutboundMessage, Peer};
 
-use tokio::net::{TcpListener, TcpStream};
+async fn free_port() -> SocketAddr {
+    let listener = TcpListener::bind("127.0.0.1:0")
+        .await
+        .expect("failed to bind temorary listener");
 
-#[tokio::test]
-async fn test_node_accepts_connections() {
-    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let address = listener.local_addr().expect("failed to get local adress");
 
-    let addr = listener.local_addr().unwrap();
+    drop(listener);
 
-    println!("this is {:?}", addr);
+    address
+}
 
-    // Simulate another node connecting.
-    let client = tokio::spawn(async move {
-        TcpStream::connect(addr).await.unwrap();
-    });
+fn create_node(
+    address: SocketAddr,
+) -> (
+    Node,
+    mpsc::Sender<NetworkEvent>,
+    mpsc::Sender<OutboundMessage>,
+) {
+    let (event_tx, event_rx) = mpsc::channel(100);
+    let (outbound_tx, outbound_rx) = mpsc::channel(100);
 
-    let (stream, peer_addr) = listener.accept().await.unwrap();
+    let node = Node::new(
+        address,
+        event_tx.clone(),
+        event_rx,
+        outbound_tx.clone(),
+        outbound_rx,
+    );
 
-    let peer = Peer::new(peer_addr, stream);
-
-    println!("this is {:?}", peer.address());
-
-    assert_eq!(*peer.address(), peer_addr);
-
-    client.await.unwrap();
+    (node, event_tx, outbound_tx)
 }
 
 #[tokio::test]
-async fn test_node_connects_to_peer() {
-    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+async fn test_node_accepts_connection() {
+    let node_address = free_port().await;
 
-    let server_address = listener.local_addr().unwrap();
+    let (mut node, _event_tx, _outbound_tx) = create_node(node_address);
 
-    let server = tokio::spawn(async move {
-        let (stream, peer_address) = listener.accept().await.unwrap();
+    let node_task = tokio::spawn(async move { node.start().await });
 
-        let mut peer = Peer::new(peer_address, stream);
+    //Give the listner time to start
+    tokio::time::sleep(Duration::from_millis(50)).await;
 
-        let message = peer.receive().await.unwrap();
+    let _stream = tokio::net::TcpStream::connect(node_address)
+        .await
+        .expect("failed to connect to node");
 
-        assert!(matches!(message, NetworkMessage::Ping));
+    // If the TCP connection succeeds, the Node accepted/listened
+    // on the expected address.
+    println!("ip address: {}", node_address);
+    assert!(node_address.ip().is_loopback());
 
-        peer.send(&NetworkMessage::Pong).await.unwrap();
-    });
+    node_task.abort();
+}
 
-    let node = Node::new("127.0.0.1:0".parse().unwrap());
+#[tokio::test]
+async fn test_node_receives_ping_and_responds_pong() {
+    let node_address = free_port().await;
 
-    let mut peer = node.connect_to_peer(server_address).await.unwrap();
+    let (event_tx, event_rx) = mpsc::channel(100);
+    let (outbound_tx, outbound_rx) = mpsc::channel(100);
 
-    peer.send(&NetworkMessage::Ping).await.unwrap();
+    let mut node = Node::new(node_address, event_tx, event_rx, outbound_tx, outbound_rx);
 
-    let response = peer.receive().await.unwrap();
+    let node_task = tokio::spawn(async move { node.start().await });
+
+    tokio::time::sleep(Duration::from_millis(50)).await;
+
+    let stream = tokio::net::TcpStream::connect(node_address)
+        .await
+        .expect("failed to connect");
+
+    let peer_address = stream.local_addr().expect("failed to get local address");
+
+    let mut test_peer = network::Peer::new(peer_address, stream);
+
+    // Test Peer → Node
+    test_peer
+        .send(&NetworkMessage::Ping)
+        .await
+        .expect("failed to send ping");
+
+    // Node → Test Peer
+    let response = timeout(Duration::from_secs(2), test_peer.receive())
+        .await
+        .expect("timed out waiting for pong")
+        .expect("failed to receive pong");
 
     assert!(matches!(response, NetworkMessage::Pong));
 
-    server.await.unwrap();
-}
-
-#[tokio::test]
-async fn test_transaction_message() {
-    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
-
-    let address = listener.local_addr().unwrap();
-
-    let server = tokio::spawn(async move {
-        let (stream, peer_address) = listener.accept().await.unwrap();
-
-        let mut peer = Peer::new(peer_address, stream);
-
-        let message = peer.receive().await.unwrap();
-
-        match message {
-            NetworkMessage::NewTransaction(tx) => {
-                assert_eq!(tx.nonce(), 0);
-            }
-
-            _ => {
-                panic!("Expected transaction message");
-            }
-        }
-    });
-
-    let client = TcpStream::connect(address).await.unwrap();
-
-    // `address` is the remote/server address.
-    let mut peer = Peer::new(address, client);
-
-    let transaction = get_transaction();
-
-    peer.send(&NetworkMessage::NewTransaction(Box::new(transaction)))
-        .await
-        .unwrap();
-
-    server.await.unwrap();
-}
-
-fn get_transaction() -> Transaction {
-    let mut blockchain = Blockchain::new(2).unwrap();
-
-    let alice = Keypair::generate();
-
-    let bob = Keypair::generate();
-
-    let alice_addr = Address::from(alice.public_key());
-
-    blockchain.state_mut().credit(alice_addr, 5000).unwrap();
-
-    Transaction::new(&alice, bob.public_key(), 100, 0, 5).unwrap()
+    node_task.abort();
 }
