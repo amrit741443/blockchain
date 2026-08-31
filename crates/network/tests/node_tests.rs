@@ -2,7 +2,7 @@ use std::{net::SocketAddr, time::Duration};
 
 use tokio::{net::TcpListener, sync::mpsc, time::timeout};
 
-use network::{NetworkEvent, NetworkMessage, Node, OutboundMessage, Peer};
+use network::{NetworkEvent, NetworkMessage, Node, OutboundMessage};
 
 async fn free_port() -> SocketAddr {
     let listener = TcpListener::bind("127.0.0.1:0")

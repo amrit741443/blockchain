@@ -17,6 +17,9 @@ pub enum TransactionError {
     #[error("invalid cryptographic signature: {0}")]
     InvalidSignature(#[source] CryptoError),
 
+    #[error("duplicate transaction")]
+    Duplicate,
+
     #[error("invalid nonce: expected:{expected} got:{got}")]
     InvalidNonce { expected: u64, got: u64 },
 

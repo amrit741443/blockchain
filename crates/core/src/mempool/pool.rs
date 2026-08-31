@@ -45,6 +45,12 @@ impl Mempool {
     ) -> Result<(), TransactionError> {
         // *1. Verify signature
         tx.verify()?;
+
+        let tx_hash = tx.tx_id()?;
+        // 3. Reject duplicate transaction
+        if self.pending_transactions.contains_key(&tx_hash) {
+            return Err(TransactionError::Duplicate);
+        }
         let sender = Address::from(*tx.sender());
 
         // *2 Get committed account state.
@@ -101,9 +107,6 @@ impl Mempool {
             }
             .into());
         }
-
-        // *8. clculate transaction hash
-        let tx_hash = tx.tx_id()?;
 
         // *9. store transaction in pending transactions
         self.pending_transactions.insert(tx_hash, tx);
